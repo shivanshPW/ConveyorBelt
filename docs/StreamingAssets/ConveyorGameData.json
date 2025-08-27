@@ -144,7 +144,7 @@
         {
           "id": "Milk_of_magnesia",
           "display_text": "pH: ~10.5",
-          "correct_category_name": "NEUTRAL",
+          "correct_category_name": "BASE",
           "presentation_mode": "PROPERTY_CUE",
           "reaction_type": "PH_INDICATOR_GREEN"
         },
@@ -164,7 +164,7 @@
         },
         {
           "id": "Shampoo",
-          "display_text": "pH: ~6.0",
+          "display_text": "pH: ~7.0",
           "correct_category_name": "NEUTRAL",
           "presentation_mode": "PROPERTY_CUE",
           "reaction_type": "NO_REACTION"
