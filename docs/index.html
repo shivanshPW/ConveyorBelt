@@ -5,69 +5,71 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Unity Web Player | Shorted</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <!-- The old style.css is no longer needed, styles are below -->
+    <!-- The external style.css is replaced by the styles below -->
     <style>
       /* Basic page setup */
-      html, body {
-        background-color: #000; /* Black background */
-        margin: 0;
+      body {
         padding: 0;
-        width: 100%;
-        height: 100%;
+        margin: 0;
         overflow: hidden; /* Prevent scrollbars */
+        background-color: black; /* This creates the black bars */
+        /* Use Flexbox to center the game container */
         display: flex;
-        justify-content: center; /* Center horizontally */
-        align-items: center;    /* Center vertically */
+        justify-content: center;
+        align-items: center;
+        height: 100vh; /* Make body take up the full viewport height */
       }
-
-      /* Game container to hold the canvas and maintain aspect ratio */
+      /* The main container that will be resized to maintain aspect ratio */
       #unity-container {
         position: relative;
-        /* Width and height will be set by JavaScript */
+        width: 100%;
+        height: 100%;
       }
-
-      /* The canvas where the game is rendered */
+      /* The game canvas itself */
       #unity-canvas {
         width: 100%;
         height: 100%;
-        display: block;
-        visibility: hidden; /* Hide canvas until the game is ready */
+        visibility: hidden; /* Hide canvas until the game is fully loaded */
       }
-
-      /* Centered loading bar */
-      #unity-loading-bar {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        display: none;
-      }
-      
-      /* Hide the default Unity footer text */
-      #unity-footer {
-        display: none;
-      }
-      
-      /* Splash screen styling */
+      /* Your splash screen image */
       #splash-screen {
         position: absolute;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
         z-index: 2; /* Ensure it's on top */
+        max-width: 90%; /* Prevent it from being too large on small screens */
       }
-
+      /* Hides the "Shorted" title from the Unity template */
+      #unity-build-title {
+        display: none;
+      }
+      /* --- Default Unity Template Styles --- */
+      #unity-loading-bar { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none }
+      #unity-logo { width: 154px; height: 130px; background: url('TemplateData/unity-logo-dark.png') no-repeat center }
+      #unity-progress-bar-empty { width: 141px; height: 18px; margin-top: 10px; margin-left: 6.5px; background: url('TemplateData/progress-bar-empty-dark.png') no-repeat center }
+      #unity-progress-bar-full { width: 0%; height: 18px; margin-top: 10px; background: url('TemplateData/progress-bar-full-dark.png') no-repeat center }
+      #unity-footer { position: relative }
+      .unity-mobile #unity-footer { display: none }
+      #unity-fullscreen-button { cursor: pointer; float: right; width: 38px; height: 38px; background: url('TemplateData/fullscreen-button.png') no-repeat center }
+      #unity-warning { position: absolute; left: 50%; top: 5%; transform: translate(-50%); background: white; padding: 10px; display: none }
     </style>
   </head>
   <body>
+    <!-- The container that will hold the game and be resized -->
     <div id="unity-container">
-      <!-- 1. ADD YOUR SPLASH IMAGE HERE -->
-      <!-- Replace 'your-logo.png' with the path to your game's logo or splash image -->
-      <img src="your-logo.png" id="splash-screen" alt="Loading Game..." style="width: 200px; height: auto;">
-
-      <!-- 2. CANVAS RESOLUTION IS NOW 1920x1080 -->
-      <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1"></canvas>
       
+      <!-- 
+        SPLASH SCREEN
+        Replace 'TemplateData/my-logo.png' with the path to your own game logo or splash image.
+        This will be shown instantly while the game loads.
+      -->
+      <img src="TemplateData/splash.jpeg" id="splash-screen" alt="Loading Game...">
+      
+      <!-- The Unity Canvas -->
+      <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1"></canvas>
+      
+      <!-- Unity Loading Bar and Footer -->
       <div id="unity-loading-bar">
         <div id="unity-logo"></div>
         <div id="unity-progress-bar-empty">
@@ -75,21 +77,35 @@
         </div>
       </div>
       <div id="unity-warning"> </div>
-      <!-- The footer is now hidden by CSS, so you don't need to delete it -->
       <div id="unity-footer">
-        <div id="unity-logo-title-footer"></div>
         <div id="unity-fullscreen-button"></div>
+        <!-- The "Shorted" title is still in the HTML but hidden by the CSS above -->
         <div id="unity-build-title">Shorted</div>
       </div>
     </div>
     <script>
-      var unityContainer = document.querySelector("#unity-container");
+      var container = document.querySelector("#unity-container");
       var canvas = document.querySelector("#unity-canvas");
-      var splashScreen = document.querySelector("#splash-screen");
+      var splash = document.querySelector("#splash-screen");
       var loadingBar = document.querySelector("#unity-loading-bar");
 
       function unityShowBanner(msg, type) {
-        // ... (your existing banner function is unchanged)
+        var warningBanner = document.querySelector("#unity-warning");
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
       }
 
       var buildUrl = "Build";
@@ -106,39 +122,29 @@
         showBanner: unityShowBanner,
       };
 
-      // 3. NEW RESIZING LOGIC
-      // This function calculates and applies the correct size to the container
-      function resize() {
+      // --- RESIZE FUNCTION FOR ASPECT RATIO ---
+      function resizeCanvas() {
         var desiredRatio = 1920 / 1080;
-        var width = window.innerWidth;
-        var height = window.innerHeight;
-        var windowRatio = width / height;
-
+        var windowRatio = window.innerWidth / window.innerHeight;
+        
         if (windowRatio > desiredRatio) {
           // Window is wider than the game
-          height = window.innerHeight;
-          width = height * desiredRatio;
+          container.style.height = window.innerHeight + 'px';
+          container.style.width = (window.innerHeight * desiredRatio) + 'px';
         } else {
           // Window is taller than the game
-          width = window.innerWidth;
-          height = width / desiredRatio;
+          container.style.width = window.innerWidth + 'px';
+          container.style.height = (window.innerWidth / desiredRatio) + 'px';
         }
-        
-        unityContainer.style.width = width + 'px';
-        unityContainer.style.height = height + 'px';
       }
 
-      // Call resize function on window load and whenever it's resized
-      window.addEventListener('resize', resize);
-      resize();
-
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-      }
-
+      // Call resize function now and whenever the window is resized
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
+      
+      // --- This part is no longer needed as our resize function is universal ---
+      // if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) { ... }
+      
       loadingBar.style.display = "block";
 
       var script = document.createElement("script");
@@ -147,11 +153,11 @@
         createUnityInstance(canvas, config, (progress) => {
           document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
         }).then((unityInstance) => {
-          // 4. HIDE SPLASH/LOADING AND SHOW THE GAME
+          // Game has loaded
           loadingBar.style.display = "none";
-          splashScreen.style.display = "none"; // Hide splash image
+          splash.style.display = "none"; // Hide the splash image
           canvas.style.visibility = "visible"; // Show the game canvas
-
+          
           document.querySelector("#unity-fullscreen-button").onclick = () => {
             unityInstance.SetFullscreen(1);
           };
@@ -159,9 +165,7 @@
           alert(message);
         });
       };
-
       document.body.appendChild(script);
-
     </script>
   </body>
 </html>
