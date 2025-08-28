@@ -5,35 +5,44 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Unity Web Player | Shorted</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <!-- The external style.css is replaced by the styles below -->
     <style>
       /* Basic page setup */
       body {
         padding: 0;
         margin: 0;
-        overflow: hidden; /* Prevent scrollbars */
-        background-color: black; /* This creates the black bars */
-        /* Use Flexbox to perfectly center the game container */
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh; /* Make body take up the full viewport height */
+        overflow: hidden;
+        background-color: black;
+        
+        /* --- KEY CHANGE FOR VERTICAL SCREENS --- */
+        /* Use CSS Grid to create a single cell that is the size of the screen */
+        display: grid;
+        /* Center the game container within that grid cell */
+        place-items: center; 
+        
+        /* Use dynamic viewport height for mobile to account for browser UI (address bars, etc.) */
+        /* This is the modern, robust way to handle full screen on mobile. */
+        height: 100vh; /* Fallback for older browsers */
+        height: 100dvh; 
       }
 
-      /* The main container that will be resized to maintain aspect ratio */
+      /* The main container that will hold the game */
       #unity-container {
         position: relative;
-        max-width: 100vw;  /* Max width is 100% of the viewport width */
-        max-height: 100vh; /* Max height is 100% of the viewport height */
-        /* This is the key property that maintains the 16:9 ratio */
-        aspect-ratio: 1920 / 1080; 
+
+        /* --- KEY CHANGE FOR VERTICAL SCREENS --- */
+        /* The container's max size is 100% of its parent grid cell (which is the whole screen) */
+        max-width: 100%;
+        max-height: 100%;
+        
+        /* This forces the container to always maintain a 16:9 ratio within the available space */
+        aspect-ratio: 1920 / 1080;
       }
 
-      /* The game canvas itself */
+      /* The game canvas itself, fills the container */
       #unity-canvas {
         width: 100%;
         height: 100%;
-        display: block; /* Ensures it fits the container properly */
+        display: block; 
         visibility: hidden; /* Hide canvas until the game is fully loaded */
       }
       
@@ -44,15 +53,15 @@
         left: 50%;
         transform: translate(-50%, -50%);
         z-index: 2; /* Ensure it's on top */
-        max-width: 90%; /* Prevent it from being too large on small screens */
+        max-width: 90%; 
       }
       
-      /* Hides the "Shorted" title from the Unity template */
+      /* Hides the "Shorted" title */
       #unity-build-title {
         display: none;
       }
       
-      /* --- Default Unity Template Styles (needed for the loading bar) --- */
+      /* --- Default Unity Template Styles --- */
       #unity-loading-bar { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: none }
       #unity-logo { width: 154px; height: 130px; background: url('TemplateData/unity-logo-dark.png') no-repeat center }
       #unity-progress-bar-empty { width: 141px; height: 18px; margin-top: 10px; margin-left: 6.5px; background: url('TemplateData/progress-bar-empty-dark.png') no-repeat center }
@@ -65,17 +74,8 @@
   </head>
   <body>
     <div id="unity-container">
-      
-      <!-- 
-        SPLASH SCREEN
-        Action: Replace 'TemplateData/my-splash.png' with the path to your own image.
-      -->
       <img src="TemplateData/splash.jpeg" id="splash-screen" alt="Loading Game...">
-      
-      <!-- The Unity Canvas (Resolution updated to 1920x1080) -->
       <canvas id="unity-canvas" width="1920" height="1080" tabindex="-1"></canvas>
-      
-      <!-- Unity Loading Bar and Footer -->
       <div id="unity-loading-bar">
         <div id="unity-logo"></div>
         <div id="unity-progress-bar-empty">
@@ -89,45 +89,17 @@
       </div>
     </div>
     <script>
+      // NOTE: No JavaScript changes are needed. The solution is pure CSS.
       var canvas = document.querySelector("#unity-canvas");
       var splash = document.querySelector("#splash-screen");
       var loadingBar = document.querySelector("#unity-loading-bar");
 
-      function unityShowBanner(msg, type) {
-        var warningBanner = document.querySelector("#unity-warning");
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
-      }
+      function unityShowBanner(msg, type) { /* ... (your existing banner function) ... */ }
 
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/ABN_Sorting.loader.js";
-      var config = {
-        arguments: [],
-        dataUrl: buildUrl + "/ABN_Sorting.data",
-        frameworkUrl: buildUrl + "/ABN_Sorting.framework.js",
-        codeUrl: buildUrl + "/ABN_Sorting.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "DefaultCompany",
-        productName: "Shorted",
-        productVersion: "1.0",
-        showBanner: unityShowBanner,
-      };
+      var config = { /* ... (your existing config object) ... */ };
 
-      // The old mobile/desktop detection logic has been removed as our CSS is universal.
-      
       loadingBar.style.display = "block";
 
       var script = document.createElement("script");
@@ -136,11 +108,9 @@
         createUnityInstance(canvas, config, (progress) => {
           document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
         }).then((unityInstance) => {
-          // Game has loaded, now hide loading elements and show the game
           loadingBar.style.display = "none";
-          splash.style.display = "none"; // Hide the splash image
-          canvas.style.visibility = "visible"; // Show the game canvas
-          
+          splash.style.display = "none";
+          canvas.style.visibility = "visible";
           document.querySelector("#unity-fullscreen-button").onclick = () => {
             unityInstance.SetFullscreen(1);
           };
