@@ -5,36 +5,35 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Unity Web Player | Shorted</title>
     <link rel="shortcut icon" href="TemplateData/favicon.ico">
-    <!-- The old style.css is not needed; these styles control the wrapper -->
+    <!-- The old style.css is replaced by these styles for better control -->
     <style>
-      /* Set the background to black and use flexbox to center the game */
       html, body {
-        background-color: #000;
-        margin: 0;
-        padding: 0;
+        background: #000;
         width: 100%;
         height: 100%;
         overflow: hidden; /* Prevents scrollbars */
+        margin: 0;
+        padding: 0;
+        /* These three lines center the game container */
         display: flex;
-        justify-content: center; /* Center horizontally */
-        align-items: center;    /* Center vertically */
+        justify-content: center;
+        align-items: center;
       }
-      /* This container will be resized by our script to maintain the aspect ratio */
+      /* This is the wrapper that will be resized to maintain the aspect ratio */
       #unity-container {
         position: relative;
-        /* Width and height are set dynamically by JavaScript */
       }
-      /* The canvas should always fill the container */
+      /* The game canvas will always fill its container */
       #unity-canvas {
         width: 100%;
         height: 100%;
-        background: #000; /* A black background for the canvas itself */
+        background: #000;
       }
-      /* Rule to hide the "Shorted" text */
+      /* Rule to hide the build title */
       #unity-build-title {
         display: none;
       }
-      /* Simple centering for the loading bar */
+      /* Keep the loading bar centered within the container */
       #unity-loading-bar {
         position: absolute;
         left: 50%;
@@ -45,7 +44,7 @@
   </head>
   <body>
     <div id="unity-container">
-      <!-- Change canvas resolution to your game's native 1920x1080 -->
+      <!-- Changed canvas resolution to your target 1920x1080 -->
       <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1"></canvas>
       <div id="unity-loading-bar">
         <div id="unity-logo"></div>
@@ -57,7 +56,7 @@
       <div id="unity-footer">
         <div id="unity-logo-title-footer"></div>
         <div id="unity-fullscreen-button"></div>
-        <!-- This is now hidden by the CSS style above -->
+        <!-- This element still exists but is now hidden by our CSS */ -->
         <div id="unity-build-title">Shorted</div>
       </div>
     </div>
@@ -97,41 +96,45 @@
         productVersion: "1.0",
         showBanner: unityShowBanner,
       };
-
-      // Add viewport meta tag for better mobile behavior
-      var meta = document.createElement('meta');
-      meta.name = 'viewport';
-      meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-      document.getElementsByTagName('head')[0].appendChild(meta);
-
+      
       // --- START: Aspect Ratio Resizing Logic ---
-      function resizeGame() {
-        var targetAspectRatio = 1920 / 1080;
-        var windowWidth = window.innerWidth;
-        var windowHeight = window.innerHeight;
-        var windowAspectRatio = windowWidth / windowHeight;
-        
-        var newWidth, newHeight;
+      function resizeAndMaintainAspectRatio() {
+        // Your game's native aspect ratio (1920 / 1080 = 1.777...)
+        const targetRatio = 16.0 / 9.0;
 
-        if (windowAspectRatio > targetAspectRatio) {
-          // Window is wider than the game, so the height is the limiting factor
-          newHeight = windowHeight;
-          newWidth = newHeight * targetAspectRatio;
+        let newWidth = window.innerWidth;
+        let newHeight = window.innerHeight;
+        let windowRatio = newWidth / newHeight;
+
+        // Compare the window's aspect ratio to your game's
+        if (windowRatio > targetRatio) {
+          // Window is wider than the game (needs black bars on the sides)
+          newWidth = newHeight * targetRatio;
         } else {
-          // Window is taller than the game, so the width is the limiting factor
-          newWidth = windowWidth;
-          newHeight = newWidth / targetAspectRatio;
+          // Window is taller than the game (needs black bars on top/bottom)
+          newHeight = newWidth / targetRatio;
         }
-
+        
+        // Apply the newly calculated size to the container div
         unityContainer.style.width = newWidth + 'px';
         unityContainer.style.height = newHeight + 'px';
       }
 
-      // Add an event listener to resize when the window changes size
-      window.addEventListener('resize', resizeGame);
-      // Call it once on startup to set the initial size
-      resizeGame();
+      // Add an event listener to run the resize function whenever the browser window changes size
+      window.addEventListener('resize', resizeAndMaintainAspectRatio);
+      // Run the function once on page load to set the initial size
+      resizeAndMaintainAspectRatio();
       // --- END: Aspect Ratio Resizing Logic ---
+
+
+      // The old mobile/desktop detection logic is removed as our new function handles all cases.
+      // This viewport meta tag is still good to have for mobile browsers.
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+      }
 
       document.querySelector("#unity-loading-bar").style.display = "block";
 
@@ -153,7 +156,6 @@
     </script>
   </body>
 </html>
-
 
 
 <!-- <!DOCTYPE html>

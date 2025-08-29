@@ -182,7 +182,7 @@
     {
       "level": 3,
       "objective_text": "Expert sorting: Identify weak and strong acids/bases by image alone!",
-      "conveyor_speed_modifier": 1,
+      "conveyor_speed_modifier": 0.8,
       "total_items_in_level": 10,
       "item_spawn_interval_seconds": 9,
       "xp_per_correct": 8,
