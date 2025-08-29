@@ -90,7 +90,7 @@
     {
       "level": 2,
       "objective_text": "Observe the reactions and sort substances correctly!",
-      "conveyor_speed_modifier": 0.8,
+      "conveyor_speed_modifier": 0.7,
       "total_items_in_level": 10,
       "item_spawn_interval_seconds": 5,
       "xp_per_correct": 7,
