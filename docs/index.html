@@ -79,7 +79,17 @@
 
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/ABN_Sorting.loader.js";
-      var config = { /* ... (your config object) ... */ };
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/ABN_Sorting.data",
+        frameworkUrl: buildUrl + "/ABN_Sorting.framework.js",
+        codeUrl: buildUrl + "/ABN_Sorting.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "Shorted",
+        productVersion: "1.0",
+        showBanner: unityShowBanner,
+      };
 
       var meta = document.createElement('meta');
       meta.name = 'viewport';
