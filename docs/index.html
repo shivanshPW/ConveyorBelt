@@ -105,11 +105,8 @@
     </div>
 
     <div id="unity-container">
-      <!-- Base resolution is now 1920x1080 -->
       <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1"></canvas>
       <div id="unity-warning"></div>
-      
-      <!-- Re-Enter Fullscreen Button -->
       <div id="re-fullscreen-button">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
             <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 2h-2v3h-3v2h5v-5zm-3-4V5h-2v2h3v3h2V5h-5z"/>
@@ -126,23 +123,26 @@
       var reFullscreenButton = document.querySelector("#re-fullscreen-button");
 
       // --- BANNER FUNCTION (from your base script) ---
-      function unityShowBanner(msg, type) { /* Unchanged */ }
-
-      // --- UNITY BUILD CONFIG (from your base script - THIS IS THE KEY) ---
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/ABN_Sorting.loader.js";
-      var config = {
-        arguments: [],
-        dataUrl: buildUrl + "/ABN_Sorting.data",
-        frameworkUrl: buildUrl + "/ABN_Sorting.framework.js",
-        codeUrl: buildUrl + "/ABN_Sorting.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "DefaultCompany",
-        productName: "Shorted",
-        productVersion: "1.0",
-        showBanner: unityShowBanner,
-      };
-
+      // A simple banner function for displaying warnings or errors from Unity.
+      function unityShowBanner(msg, type) {
+        var warningBanner = document.querySelector("#unity-warning");
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px; color: white;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px; color: black;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+      }
+      
       // --- HELPER FUNCTIONS (Orientation and Resizing) ---
       function checkOrientation() {
         if (window.innerHeight > window.innerWidth && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
@@ -180,16 +180,38 @@
       meta.name = 'viewport';
       meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
       document.getElementsByTagName('head')[0].appendChild(meta);
+      
+
+      // --- UNITY BUILD CONFIG (DEFINED *BEFORE* LOADING THE SCRIPT) ---
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/ABN_Sorting.loader.js";
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/ABN_Sorting.data.unityweb", // Adjusted to a common Unity naming convention
+        frameworkUrl: buildUrl + "/ABN_Sorting.framework.js.unityweb", // Adjusted
+        codeUrl: buildUrl + "/ABN_Sorting.wasm.unityweb", // Adjusted
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany", // Now correctly provided
+        productName: "Shorted",      // Now correctly provided
+        productVersion: "1.0",         // Now correctly provided
+        showBanner: unityShowBanner,
+      };
+
+      // --- SCRIPT LOADING AND UNITY INSTANCE CREATION ---
+      
+      // Initial UI setup before loading starts
       resizeGameContainer();
       checkOrientation();
 
-      // --- UNITY INSTANCE CREATION ---
       var script = document.createElement("script");
       script.src = loaderUrl;
+      // The onload event ensures the loader script is ready before we use it
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
+          // Update your custom loading bar
           statusText.innerHTML = `Loading... ${Math.round(progress * 100)}%`;
         }).then((unityInstance) => {
+          // Game has loaded successfully
           statusText.innerHTML = "Tap to Start";
           statusOverlay.style.cursor = 'pointer';
           
@@ -206,18 +228,22 @@
           document.addEventListener('fullscreenchange', checkFullscreenState);
           document.addEventListener('webkitfullscreenchange', checkFullscreenState);
           
+          // Add a one-time click event to start the game and enter fullscreen
           statusOverlay.addEventListener('click', () => {
             statusOverlay.style.display = 'none';
             unityInstance.SetFullscreen(1);
-            setInterval(checkFullscreenState, 1000); // Start reliable check for mobile
-            setTimeout(checkFullscreenState, 500);
+            // Check fullscreen state after a short delay to allow the browser to transition
+            setTimeout(checkFullscreenState, 500); 
           }, { once: true });
 
         }).catch((message) => {
+          // Handle any errors during initialization
           alert(message);
         });
       };
+      
+      // Append the script to the body to start the loading process
       document.body.appendChild(script);
     </script>
   </body>
-</html>```
+</html>
