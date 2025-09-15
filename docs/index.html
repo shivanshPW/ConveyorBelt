@@ -76,7 +76,7 @@
         100% { transform: rotate(-90deg); }
       }
 
-      /* --- NEW: RE-ENTER FULLSCREEN BUTTON --- */
+      /* --- RE-ENTER FULLSCREEN BUTTON --- */
       #re-fullscreen-button {
         position: absolute;
         top: 10px;
@@ -87,8 +87,8 @@
         border: 1px solid rgba(255, 255, 255, 0.5);
         border-radius: 5px;
         cursor: pointer;
-        z-index: 101; /* Must be on top of everything */
-        display: none; /* Hidden by default, shown by JS */
+        z-index: 101;
+        display: none; /* Hidden by default */
       }
       #re-fullscreen-button:hover {
         background: rgba(0, 0, 0, 0.7);
@@ -96,9 +96,8 @@
       #re-fullscreen-button svg {
         width: 70%;
         height: 70%;
-        margin: 15%; /* Center the icon */
+        margin: 15%;
       }
-
     </style>
   </head>
   <body>
@@ -115,7 +114,7 @@
       <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1"></canvas>
       <div id="unity-warning"></div>
       
-      <!-- NEW: Re-Enter Fullscreen Button -->
+      <!-- Re-Enter Fullscreen Button -->
       <div id="re-fullscreen-button">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
             <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 2h-2v3h-3v2h5v-5zm-3-4V5h-2v2h3v3h2V5h-5z"/>
@@ -129,11 +128,10 @@
       var statusOverlay = document.querySelector("#status-overlay");
       var statusText = document.querySelector("#status-text");
       var orientationOverlay = document.querySelector("#orientation-overlay");
-      // NEW: Get the button
       var reFullscreenButton = document.querySelector("#re-fullscreen-button");
 
-      // --- ORIENTATION & RESIZE LOGIC ---
-      function checkOrientation() { /* ... unchanged ... */
+      // --- ORIENTATION & RESIZE LOGIC (Unchanged) ---
+      function checkOrientation() {
         if (window.innerHeight > window.innerWidth) {
           orientationOverlay.style.display = 'flex';
         } else {
@@ -144,7 +142,7 @@
       window.addEventListener('orientationchange', checkOrientation);
       checkOrientation();
 
-      function resizeGameContainer() { /* ... unchanged ... */
+      function resizeGameContainer() {
         const targetAspectRatio = 1920 / 1080;
         let width = window.innerWidth;
         let height = window.innerHeight;
@@ -160,22 +158,12 @@
       window.addEventListener('resize', resizeGameContainer);
       resizeGameContainer();
 
-      function unityShowBanner(msg, type) { /* ... unchanged ... */ }
+      function unityShowBanner(msg, type) { /* ... Unchanged ... */ }
 
       // --- UNITY BUILD CONFIG ---
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/ABN_Sorting.loader.js";
-      var config = {
-        arguments: [],
-        dataUrl: buildUrl + "/ABN_Sorting.data",
-        frameworkUrl: buildUrl + "/ABN_Sorting.framework.js",
-        codeUrl: buildUrl + "/ABN_Sorting.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "DefaultCompany",
-        productName: "Shorted",
-        productVersion: "1.0",
-        showBanner: unityShowBanner,
-      };
+      var loaderUrl = buildUrl + "/ABN_Sorting.loader.js"; // This should match your build files
+      var config = { /* ... Your full config object ... */ }; // This should match your build files
       
       var meta = document.createElement('meta');
       meta.name = 'viewport';
@@ -195,29 +183,38 @@
           statusText.innerHTML = "Tap to Start";
           statusOverlay.style.cursor = 'pointer';
           
-          statusOverlay.addEventListener('click', () => {
-            statusOverlay.style.display = 'none';
-            unityInstance.SetFullscreen(1);
-          }, { once: true });
-          
-          // --- NEW: RE-FULLSCREEN BUTTON LOGIC ---
-          // 1. Make the button trigger fullscreen when clicked
+          // --- RE-FULLSCREEN BUTTON LOGIC ---
           reFullscreenButton.onclick = () => {
             unityInstance.SetFullscreen(1);
           };
 
-          // 2. This function checks if we are in fullscreen and shows/hides the button
           function checkFullscreenState() {
-            // document.fullscreenElement is null if not in fullscreen
-            if (document.fullscreenElement) {
-              reFullscreenButton.style.display = 'none'; // Hide button in fullscreen
+            // Check for any of the vendor-prefixed fullscreen elements
+            if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+              reFullscreenButton.style.display = 'none';
             } else {
-              reFullscreenButton.style.display = 'block'; // Show button when not in fullscreen
+              reFullscreenButton.style.display = 'block';
             }
           }
 
-          // 3. Listen for changes in fullscreen state (e.g., user pressing ESC)
+          // Listen for fullscreen changes (for desktop/reliable browsers)
           document.addEventListener('fullscreenchange', checkFullscreenState);
+          document.addEventListener('webkitfullscreenchange', checkFullscreenState);
+          
+          // "Tap to Start" action
+          statusOverlay.addEventListener('click', () => {
+            statusOverlay.style.display = 'none';
+            unityInstance.SetFullscreen(1);
+            
+            // --- THE FIX ---
+            // Start the periodic check ONLY after the game has started.
+            // This acts as a reliable fallback for mobile browser back gestures.
+            setInterval(checkFullscreenState, 1000); // Check every second
+            
+            // Also run a check shortly after to hide the button initially
+            setTimeout(checkFullscreenState, 500);
+
+          }, { once: true });
 
         }).catch((message) => {
           alert(message);
