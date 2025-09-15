@@ -20,19 +20,16 @@
       }
       #unity-container {
         position: relative;
+        /* The width and height are set by JavaScript to maintain aspect ratio */
       }
       #unity-canvas {
         width: 100%;
         height: 100%;
         background: #000;
       }
-      #unity-build-title { display: none; }
-      #unity-loading-bar {
-        /* The default loading bar is replaced by our custom overlay */
-        display: none;
-      }
+      #unity-loading-bar { display: none; }
 
-      /* --- UNIFIED STATUS OVERLAY (Handles Loading and Start) --- */
+      /* --- UNIFIED STATUS OVERLAY --- */
       #status-overlay {
         position: absolute;
         top: 0;
@@ -47,10 +44,10 @@
         font-family: Arial, sans-serif;
         font-size: 2em;
         z-index: 99;
-        cursor: default; /* Not clickable until loading is finished */
+        cursor: default;
       }
 
-      /* --- ORIENTATION OVERLAY STYLE --- */
+      /* --- ORIENTATION OVERLAY --- */
       #orientation-overlay {
         position: fixed;
         top: 0;
@@ -59,13 +56,13 @@
         height: 100vh;
         background: #000;
         color: white;
-        display: none; /* Hidden by default */
+        display: none;
         justify-content: center;
         align-items: center;
         flex-direction: column;
         font-family: Arial, sans-serif;
         font-size: 1.5em;
-        z-index: 100; /* Must be on top of everything */
+        z-index: 100;
       }
       #orientation-overlay svg {
         width: 100px;
@@ -78,25 +75,45 @@
         50% { transform: rotate(-90deg); }
         100% { transform: rotate(-90deg); }
       }
+
+      /* --- RE-ENTER FULLSCREEN BUTTON --- */
+      #re-fullscreen-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 40px;
+        height: 40px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        border-radius: 5px;
+        cursor: pointer;
+        z-index: 101;
+        display: none; /* Hidden by default */
+      }
+      #re-fullscreen-button:hover { background: rgba(0, 0, 0, 0.7); }
+      #re-fullscreen-button svg { width: 70%; height: 70%; margin: 15%; }
     </style>
   </head>
   <body>
-    <!-- Unified Overlay for Loading and "Tap to Start" -->
     <div id="status-overlay">
       <div id="status-text">Loading... 0%</div>
     </div>
 
-    <!-- The Orientation Lock Overlay -->
     <div id="orientation-overlay">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M16.49,4.26l-1.42,1.42c1.9,1.9,1.9,5.0,0,6.9s-5.0,1.9-6.9,0l-1.42,1.42c2.6,2.6,6.9,2.6,9.6,0s2.6-6.9,0-9.6zM20.49,0.26l-1.42,1.42c3.7,3.7,3.7,9.7,0,13.4s-9.7,3.7-13.4,0l-1.42,1.42c4.5,4.5,11.8,4.5,16.3,0s4.5-11.8,0-16.3zM7.51,4.26c-2.6,2.6-2.6,6.9,0,9.6s6.9,2.6,9.6,0l1.42-1.42c-3.4-3.4-8.8-3.4-12.2,0l1.19,1.19L0,15.15l1.5-7.58,1.19,1.19z"/></svg>
         <p>Please rotate your device</p>
     </div>
 
     <div id="unity-container">
-      <!-- Set the canvas base resolution to your target 1920x1080 -->
       <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1"></canvas>
-      <!-- The default loading bar and footer are no longer needed -->
       <div id="unity-warning"></div>
+      
+      <!-- Re-Enter Fullscreen Button -->
+      <div id="re-fullscreen-button">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
+            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 2h-2v3h-3v2h5v-5zm-3-4V5h-2v2h3v3h2V5h-5z"/>
+        </svg>
+      </div>
     </div>
 
     <script>
@@ -105,18 +122,16 @@
       var statusOverlay = document.querySelector("#status-overlay");
       var statusText = document.querySelector("#status-text");
       var orientationOverlay = document.querySelector("#orientation-overlay");
+      var reFullscreenButton = document.querySelector("#re-fullscreen-button");
 
       // --- ORIENTATION CHECK LOGIC ---
       function checkOrientation() {
-        if (window.innerHeight > window.innerWidth) {
+        if (window.innerHeight > window.innerWidth && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
           orientationOverlay.style.display = 'flex';
         } else {
           orientationOverlay.style.display = 'none';
         }
       }
-      window.addEventListener('resize', checkOrientation);
-      window.addEventListener('orientationchange', checkOrientation);
-      checkOrientation(); // Initial check
 
       function unityShowBanner(msg, type) {
         var warningBanner = document.querySelector("#unity-warning");
@@ -151,19 +166,17 @@
         showBanner: unityShowBanner,
       };
 
-      // --- VIEWPORT & ASPECT RATIO LOGIC ---
       var meta = document.createElement('meta');
       meta.name = 'viewport';
       meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
       document.getElementsByTagName('head')[0].appendChild(meta);
       
+      // --- LETTERBOXING & ASPECT RATIO LOGIC ---
       function resizeGameContainer() {
-        // This is the target 16:9 aspect ratio
         const targetAspectRatio = 1920 / 1080;
         let width = window.innerWidth;
         let height = window.innerHeight;
-        let windowAspectRatio = width / height;
-        if (windowAspectRatio > targetAspectRatio) {
+        if (width / height > targetAspectRatio) {
           width = height * targetAspectRatio;
         } else {
           height = width / targetAspectRatio;
@@ -171,38 +184,68 @@
         unityContainer.style.width = width + 'px';
         unityContainer.style.height = height + 'px';
       }
-      window.addEventListener('resize', resizeGameContainer);
-      resizeGameContainer(); // Initial resize
+      
+      // Add universal event listeners
+      window.addEventListener('resize', () => {
+        resizeGameContainer();
+        checkOrientation();
+      });
+      window.addEventListener('orientationchange', () => {
+        resizeGameContainer();
+        checkOrientation();
+      });
 
-      // --- UNITY INSTANCE CREATION & LOADING LOGIC ---
+      // --- UNITY INSTANCE CREATION ---
       var script = document.createElement("script");
       script.src = loaderUrl;
       script.onload = () => {
         createUnityInstance(canvas, config, (progress) => {
-          // Update the text on the overlay with the current loading progress
           statusText.innerHTML = `Loading... ${Math.round(progress * 100)}%`;
-
         }).then((unityInstance) => {
-          // --- GAME IS LOADED, PREPARE FOR START ---
           
-          // 1. Change text to "Tap to Start"
           statusText.innerHTML = "Tap to Start";
-
-          // 2. Make the overlay look clickable
           statusOverlay.style.cursor = 'pointer';
           
-          // 3. Add the click listener that will start the game in fullscreen
+          // --- FULLSCREEN LOGIC ---
+          // This function shows/hides the re-enter fullscreen button
+          function checkFullscreenState() {
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
+              reFullscreenButton.style.display = 'none';
+            } else {
+              reFullscreenButton.style.display = 'block';
+            }
+          }
+          
+          document.addEventListener('fullscreenchange', checkFullscreenState);
+          document.addEventListener('webkitfullscreenchange', checkFullscreenState);
+
+          // Assign click behavior for the re-enter button
+          reFullscreenButton.onclick = () => {
+            // Use the container for fullscreen to preserve aspect ratio
+            unityContainer.requestFullscreen();
+          };
+          
+          // The main click event to start the game
           statusOverlay.addEventListener('click', () => {
-            // Hide the overlay
             statusOverlay.style.display = 'none';
-            // Request fullscreen
-            unityInstance.SetFullscreen(1);
-          }, { once: true }); // '{ once: true }' is important, it makes the listener fire only once
+
+            // **KEY CHANGE**: Request fullscreen on the CONTAINER, not the canvas.
+            // This preserves the aspect ratio and creates the letterbox effect.
+            unityContainer.requestFullscreen();
+            
+            // Start checking the fullscreen state after a delay
+            setTimeout(checkFullscreenState, 1000);
+
+          }, { once: true });
 
         }).catch((message) => {
           alert(message);
         });
       };
+      
+      // Initial setup calls before loading starts
+      resizeGameContainer();
+      checkOrientation();
       document.body.appendChild(script);
     </script>
   </body>
