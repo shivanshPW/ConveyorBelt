@@ -107,11 +107,20 @@
         // This is your game's native aspect ratio, from your canvas dimensions
         const targetAspectRatio = 1920 / 1080;
 
-        // Get the browser window's current size
-        let windowWidth = window.innerWidth;
-        let windowHeight = window.innerHeight;
-        let windowAspectRatio = windowWidth / windowHeight;
+        // Get the current available dimensions
+        let windowWidth, windowHeight;
         
+        if (document.fullscreenElement) {
+          // In fullscreen, use the actual screen dimensions
+          windowWidth = screen.width;
+          windowHeight = screen.height;
+        } else {
+          // Normal mode, use window dimensions
+          windowWidth = window.innerWidth;
+          windowHeight = window.innerHeight;
+        }
+        
+        let windowAspectRatio = windowWidth / windowHeight;
         let newWidth, newHeight;
 
         if (windowAspectRatio > targetAspectRatio) {
@@ -130,7 +139,6 @@
       }
       // --- END: NEW SCALING AND LETTERBOXING LOGIC ---
 
-
       function checkOrientation() {
         // This logic is for mobile devices in portrait mode
         if (window.innerHeight > window.innerWidth && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
@@ -146,8 +154,21 @@
         checkOrientation();
       }
 
+      // Listen for fullscreen changes
+      function onFullscreenChange() {
+        // Small delay to ensure the browser has updated the dimensions
+        setTimeout(() => {
+          applyLetterboxing();
+        }, 100);
+      }
+
+      // Event listeners
       window.addEventListener('resize', onWindowChange);
       window.addEventListener('orientationchange', onWindowChange);
+      document.addEventListener('fullscreenchange', onFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+      document.addEventListener('mozfullscreenchange', onFullscreenChange);
+      document.addEventListener('MSFullscreenChange', onFullscreenChange);
 
       function unityShowBanner(msg, type) { /* ... unchanged ... */ }
 
@@ -181,9 +202,16 @@
           
           statusOverlay.addEventListener('click', () => {
             statusOverlay.style.display = 'none';
-            // We still ask the CONTAINER to go fullscreen.
-            // Since it's already being perfectly sized, the letterboxing is maintained.
-            unityContainer.requestFullscreen();
+            // Request fullscreen on the container
+            if (unityContainer.requestFullscreen) {
+              unityContainer.requestFullscreen();
+            } else if (unityContainer.webkitRequestFullscreen) {
+              unityContainer.webkitRequestFullscreen();
+            } else if (unityContainer.mozRequestFullScreen) {
+              unityContainer.mozRequestFullScreen();
+            } else if (unityContainer.msRequestFullscreen) {
+              unityContainer.msRequestFullscreen();
+            }
           }, { once: true });
 
         }).catch((message) => {
