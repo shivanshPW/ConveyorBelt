@@ -1,252 +1,257 @@
 <!DOCTYPE html>
-<html lang="en-us">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Unity Web Player | Shorted</title>
-    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Coolie No 1 - Full Game</title>
     <style>
-      /* --- CORE LAYOUT STYLES --- */
-      html, body {
-        background: #000;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-        margin: 0;
-        padding: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-      #unity-container {
-        position: relative;
-        /* The width and height are set by JavaScript to maintain aspect ratio */
-      }
-      #unity-canvas {
-        width: 100%;
-        height: 100%;
-        background: #000;
-      }
-      #unity-loading-bar { display: none; }
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000; /* Set background to black for letterboxing */
+            font-family: 'Roboto', sans-serif;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* The main container fills the screen and organizes controls + game area */
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Center the game vertically */
+            align-items: center; /* Center the game horizontally */
+        }
+        
+        #controls {
+            background: linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(42, 42, 42, 0.95) 100%);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            width: 100%; /* Make controls take full width */
+            z-index: 10;
+        }
 
-      /* --- UNIFIED STATUS OVERLAY --- */
-      #status-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-family: Arial, sans-serif;
-        font-size: 2em;
-        z-index: 99;
-        cursor: default;
-      }
+        /* NEW: This wrapper will hold the iframe and be centered */
+        #frame-wrapper {
+            flex: 1; /* Takes up all remaining space */
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000; /* Ensures black bars */
+        }
+        
+        #game-frame {
+            border: none;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+            /* Width and Height are now set by JavaScript */
+        }
+        
+        /* Hide controls in fullscreen */
+        #game-container:fullscreen #controls {
+            display: none;
+        }
 
-      /* --- ORIENTATION OVERLAY --- */
-      #orientation-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background: #000;
-        color: white;
-        display: none;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        font-family: Arial, sans-serif;
-        font-size: 1.5em;
-        z-index: 100;
-      }
-      #orientation-overlay svg {
-        width: 100px;
-        height: 100px;
-        margin-bottom: 20px;
-        animation: rotate 1.5s ease-in-out infinite;
-      }
-      @keyframes rotate {
-        0% { transform: rotate(0deg); }
-        50% { transform: rotate(-90deg); }
-        100% { transform: rotate(-90deg); }
-      }
+        /* REMOVED the problematic rule that stretched the iframe */
+        /* #game-container:fullscreen #game-frame { height: 100vh; } */
 
-      /* --- RE-ENTER FULLSCREEN BUTTON --- */
-      #re-fullscreen-button {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        width: 40px;
-        height: 40px;
-        background: rgba(0, 0, 0, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        border-radius: 5px;
-        cursor: pointer;
-        z-index: 101;
-        display: none; /* Hidden by default */
-      }
-      #re-fullscreen-button:hover { background: rgba(0, 0, 0, 0.7); }
-      #re-fullscreen-button svg { width: 70%; height: 70%; margin: 15%; }
+        /* --- All other styles (buttons, titles, overlays etc.) remain the same --- */
+
+        .title-section { display: flex; align-items: center; gap: 20px; }
+        .game-logo { width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        .game-title { color: white; font-family: 'Bebas Neue', cursive; font-size: 32px; letter-spacing: 2px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .game-subtitle { color: rgba(255, 255, 255, 0.7); font-size: 12px; text-transform: uppercase; letter-spacing: 3px; margin-top: -5px; }
+        .btn-group { display: flex; gap: 15px; align-items: center; }
+        button { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 24px; border-radius: 25px; cursor: pointer; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); position: relative; overflow: hidden; }
+        button::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent); transition: left 0.5s ease; }
+        button:hover::before { left: 100%; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
+        button:active { transform: translateY(0); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.5); }
+        .icon { font-size: 18px; margin-right: 8px; display: inline-block; }
+        .loading-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.8); display: flex; justify-content: center; align-items: center; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .loading-overlay.active { opacity: 1; pointer-events: all; }
+        .loader { width: 50px; height: 50px; border: 3px solid rgba(255, 255, 255, 0.1); border-top-color: #667eea; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .rotate-prompt { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); z-index: 10000; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center; padding: 20px; }
+        .rotate-icon { font-size: 48px; animation: rotate 2s infinite ease-in-out; margin-bottom: 20px; }
+        @keyframes rotate { 0%, 100% { transform: rotate(-90deg); } 50% { transform: rotate(0deg); } }
+        .rotate-text { font-size: 18px; font-weight: 600; margin-bottom: 10px; }
+        .rotate-subtext { font-size: 14px; opacity: 0.8; }
+        @media (max-width: 768px) { #controls { padding: 10px 15px; } .title-section { gap: 10px; } .game-logo { width: 35px; height: 35px; font-size: 20px; } .game-title { font-size: 24px; letter-spacing: 1px; } .game-subtitle { display: none; } .btn-group { gap: 10px; } button { padding: 10px 16px; font-size: 12px; letter-spacing: 0.5px; } .icon { font-size: 16px; margin-right: 6px; } }
+        @media (max-width: 480px) { #controls { padding: 8px 10px; } .game-logo { width: 30px; height: 30px; font-size: 18px; } .game-title { font-size: 20px; } button { padding: 8px 12px; font-size: 11px; } .btn-group { gap: 8px; } @media (max-width: 350px) { button span:not(.icon) { display: none; } button .icon { margin-right: 0; } } }
+        #controls, #game-frame { animation: fadeIn 0.8s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
     </style>
-  </head>
-  <body>
-    <div id="status-overlay">
-      <div id="status-text">Loading... 0%</div>
+</head>
+<body>
+    <div id="game-container">
+        <div id="controls">
+            <div class="title-section">
+                <div class="game-logo">🎮</div>
+                <div>
+                    <h1 class="game-title">Coolie No 1</h1>
+                    <div class="game-subtitle">Adventure Game</div>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button onclick="toggleFullscreen()">
+                    <span class="icon">⛶</span><span>Fullscreen</span>
+                </button>
+                <button class="btn-secondary" onclick="restartGame()">
+                    <span class="icon">🔄</span><span>Restart</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- NEW: Wrapper for centering -->
+        <div id="frame-wrapper">
+            <iframe id="game-frame" src="game.html"></iframe>
+        </div>
+        
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loader"></div>
+        </div>
     </div>
-
-    <div id="orientation-overlay">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M16.49,4.26l-1.42,1.42c1.9,1.9,1.9,5.0,0,6.9s-5.0,1.9-6.9,0l-1.42,1.42c2.6,2.6,6.9,2.6,9.6,0s2.6-6.9,0-9.6zM20.49,0.26l-1.42,1.42c3.7,3.7,3.7,9.7,0,13.4s-9.7,3.7-13.4,0l-1.42,1.42c4.5,4.5,11.8,4.5,16.3,0s4.5-11.8,0-16.3zM7.51,4.26c-2.6,2.6-2.6,6.9,0,9.6s6.9,2.6,9.6,0l1.42-1.42c-3.4-3.4-8.8-3.4-12.2,0l1.19,1.19L0,15.15l1.5-7.58,1.19,1.19z"/></svg>
-        <p>Please rotate your device</p>
-    </div>
-
-    <div id="unity-container">
-      <canvas id="unity-canvas" width=1920 height=1080 tabindex="-1"></canvas>
-      <div id="unity-warning"></div>
-      
-      <!-- Re-Enter Fullscreen Button -->
-      <div id="re-fullscreen-button">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white">
-            <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 2h-2v3h-3v2h5v-5zm-3-4V5h-2v2h3v3h2V5h-5z"/>
-        </svg>
-      </div>
+    
+    <div class="rotate-prompt" id="rotatePrompt">
+        <div class="rotate-icon">📱</div>
+        <div class="rotate-text">Please Rotate Your Device</div>
+        <div class="rotate-subtext">This game is best played in landscape mode</div>
     </div>
 
     <script>
-      var unityContainer = document.querySelector("#unity-container");
-      var canvas = document.querySelector("#unity-canvas");
-      var statusOverlay = document.querySelector("#status-overlay");
-      var statusText = document.querySelector("#status-text");
-      var orientationOverlay = document.querySelector("#orientation-overlay");
-      var reFullscreenButton = document.querySelector("#re-fullscreen-button");
-
-      // --- ORIENTATION CHECK LOGIC ---
-      function checkOrientation() {
-        if (window.innerHeight > window.innerWidth && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-          orientationOverlay.style.display = 'flex';
-        } else {
-          orientationOverlay.style.display = 'none';
-        }
-      }
-
-      function unityShowBanner(msg, type) {
-        var warningBanner = document.querySelector("#unity-warning");
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
-      }
-
-      var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/ABN_Sorting.loader.js";
-      var config = {
-        arguments: [],
-        dataUrl: buildUrl + "/ABN_Sorting.data",
-        frameworkUrl: buildUrl + "/ABN_Sorting.framework.js",
-        codeUrl: buildUrl + "/ABN_Sorting.wasm",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "DefaultCompany",
-        productName: "Shorted",
-        productVersion: "1.0",
-        showBanner: unityShowBanner,
-      };
-
-      var meta = document.createElement('meta');
-      meta.name = 'viewport';
-      meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-      document.getElementsByTagName('head')[0].appendChild(meta);
-      
-      // --- LETTERBOXING & ASPECT RATIO LOGIC ---
-      function resizeGameContainer() {
-        const targetAspectRatio = 1920 / 1080;
-        let width = window.innerWidth;
-        let height = window.innerHeight;
-        if (width / height > targetAspectRatio) {
-          width = height * targetAspectRatio;
-        } else {
-          height = width / targetAspectRatio;
-        }
-        unityContainer.style.width = width + 'px';
-        unityContainer.style.height = height + 'px';
-      }
-      
-      // Add universal event listeners
-      window.addEventListener('resize', () => {
-        resizeGameContainer();
-        checkOrientation();
-      });
-      window.addEventListener('orientationchange', () => {
-        resizeGameContainer();
-        checkOrientation();
-      });
-
-      // --- UNITY INSTANCE CREATION ---
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          statusText.innerHTML = `Loading... ${Math.round(progress * 100)}%`;
-        }).then((unityInstance) => {
-          
-          statusText.innerHTML = "Tap to Start";
-          statusOverlay.style.cursor = 'pointer';
-          
-          // --- FULLSCREEN LOGIC ---
-          // This function shows/hides the re-enter fullscreen button
-          function checkFullscreenState() {
-            if (document.fullscreenElement || document.webkitFullscreenElement) {
-              reFullscreenButton.style.display = 'none';
-            } else {
-              reFullscreenButton.style.display = 'block';
-            }
-          }
-          
-          document.addEventListener('fullscreenchange', checkFullscreenState);
-          document.addEventListener('webkitfullscreenchange', checkFullscreenState);
-
-          // Assign click behavior for the re-enter button
-          reFullscreenButton.onclick = () => {
-            // Use the container for fullscreen to preserve aspect ratio
-            unityContainer.requestFullscreen();
-          };
-          
-          // The main click event to start the game
-          statusOverlay.addEventListener('click', () => {
-            statusOverlay.style.display = 'none';
-
-            // **KEY CHANGE**: Request fullscreen on the CONTAINER, not the canvas.
-            // This preserves the aspect ratio and creates the letterbox effect.
-            unityContainer.requestFullscreen();
+        let isInFullscreen = false;
+        
+        // --- START: LETTERBOXING LOGIC ---
+        function resizeGameFrame() {
+            const gameFrame = document.getElementById('game-frame');
+            const wrapper = document.getElementById('frame-wrapper');
             
-            // Start checking the fullscreen state after a delay
-            setTimeout(checkFullscreenState, 1000);
+            // Define the game's native aspect ratio (16:9 is common)
+            const targetAspectRatio = 16 / 9;
 
-          }, { once: true });
+            let wrapperWidth = wrapper.offsetWidth;
+            let wrapperHeight = wrapper.offsetHeight;
+            let wrapperAspectRatio = wrapperWidth / wrapperHeight;
+            
+            let newWidth, newHeight;
 
-        }).catch((message) => {
-          alert(message);
+            if (wrapperAspectRatio > targetAspectRatio) {
+                // Window is wider than the game, so height is the limiting factor
+                newHeight = wrapperHeight;
+                newWidth = newHeight * targetAspectRatio;
+            } else {
+                // Window is taller than the game, so width is the limiting factor
+                newWidth = wrapperWidth;
+                newHeight = newWidth / targetAspectRatio;
+            }
+
+            gameFrame.style.width = newWidth + 'px';
+            gameFrame.style.height = newHeight + 'px';
+        }
+        // --- END: LETTERBOXING LOGIC ---
+
+
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+        
+        function isPortrait() {
+            return window.innerHeight > window.innerWidth;
+        }
+        
+        function checkOrientationAndResize() {
+            const rotatePrompt = document.getElementById('rotatePrompt');
+            
+            // Call the resize function whenever orientation might change
+            resizeGameFrame();
+
+            if (isInFullscreen && isMobileDevice() && isPortrait()) {
+                rotatePrompt.style.display = 'flex';
+            } else {
+                rotatePrompt.style.display = 'none';
+            }
+        }
+        
+        async function toggleFullscreen() {
+            const container = document.getElementById('game-container');
+            
+            if (!document.fullscreenElement) {
+                try {
+                    await container.requestFullscreen();
+                    
+                    if (isMobileDevice() && screen.orientation && screen.orientation.lock) {
+                        await screen.orientation.lock('landscape').catch(() => {});
+                    }
+                } catch (err) {
+                    alert(`Error attempting to enable fullscreen: ${err.message}`);
+                }
+            } else {
+                await document.exitFullscreen();
+                
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
+            }
+        }
+        
+        function restartGame() {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            loadingOverlay.classList.add('active');
+            
+            setTimeout(() => {
+                document.getElementById('game-frame').src = 'game.html';
+                setTimeout(() => {
+                    loadingOverlay.classList.remove('active');
+                }, 1000);
+            }, 300);
+        }
+        
+        document.addEventListener('fullscreenchange', () => {
+            const btn = document.querySelector('button');
+            if (document.fullscreenElement) {
+                isInFullscreen = true;
+                btn.innerHTML = '<span class="icon">❎</span><span>Exit</span>';
+            } else {
+                isInFullscreen = false;
+                btn.innerHTML = '<span class="icon">⛶</span><span>Fullscreen</span>';
+            }
+            // Always check orientation and resize after a fullscreen change
+            checkOrientationAndResize();
         });
-      };
-      
-      // Initial setup calls before loading starts
-      resizeGameContainer();
-      checkOrientation();
-      document.body.appendChild(script);
+        
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F11') {
+                e.preventDefault();
+                toggleFullscreen();
+            }
+            if (e.key === 'r' && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                restartGame();
+            }
+        });
+        
+        // Listen for orientation and resize changes to apply letterboxing
+        window.addEventListener('orientationchange', checkOrientationAndResize);
+        window.addEventListener('resize', checkOrientationAndResize);
+
+        // Initial call to set the correct size when the page loads
+        resizeGameFrame();
     </script>
-  </body>
+</body>
 </html>
