@@ -90,7 +90,7 @@
     {
       "level": 2,
       "objective_text": "Observe the reactions and sort substances correctly!",
-      "conveyor_speed_modifier": 0.7,
+      "conveyor_speed_modifier": 0.5,
       "total_items_in_level": 10,
       "item_spawn_interval_seconds": 5,
       "xp_per_correct": 7,
@@ -182,7 +182,7 @@
     {
       "level": 3,
       "objective_text": "Expert sorting: Identify weak and strong acids/bases by image alone!",
-      "conveyor_speed_modifier": 0.6,
+      "conveyor_speed_modifier": 0.5,
       "total_items_in_level": 10,
       "item_spawn_interval_seconds": 9,
       "xp_per_correct": 8,
@@ -192,11 +192,11 @@
       "reactor": 0,
 
       "containers": [
-        { "name": "WEAK_ACID", "label_color": "#FFFFFF", "icon": "weak_acid_beaker.png" },
-        { "name": "STRONG_ACID", "label_color": "#FFFFFF", "icon": "strong_acid_beaker.png" },
-        { "name": "WEAK_BASE", "label_color": "#FFFFFF", "icon": "weak_base_beaker.png" },
-        { "name": "STRONG_BASE", "label_color": "#FFFFFF", "icon": "strong_base_beaker.png" },
-        { "name": "NEUTRAL", "label_color": "#FFFFFF", "icon": "neutral_beaker.png" }
+        { "name": "WEAK_ACID", "icon": "weak_acid_beaker.png" },
+        { "name": "STRONG_ACID","icon": "strong_acid_beaker.png" },
+        { "name": "WEAK_BASE","icon": "weak_base_beaker.png" },
+        { "name": "STRONG_BASE","icon": "strong_base_beaker.png" },
+        { "name": "NEUTRAL","icon": "neutral_beaker.png" }
       ],
 
       "items": [
