@@ -162,8 +162,21 @@
 
       // --- UNITY BUILD CONFIG ---
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/ABN_Sorting.loader.js"; // This should match your build files
-      var config = { /* ... Your full config object ... */ }; // This should match your build files
+      var loaderUrl = buildUrl + "/ABN_Sorting.loader.js";
+      
+      // --- THE FIX IS HERE ---
+      // This config object has been fully restored with all the necessary properties.
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/ABN_Sorting.data",
+        frameworkUrl: buildUrl + "/ABN_Sorting.framework.js",
+        codeUrl: buildUrl + "/ABN_Sorting.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "Shorted",
+        productVersion: "1.0",
+        showBanner: unityShowBanner,
+      };
       
       var meta = document.createElement('meta');
       meta.name = 'viewport';
@@ -189,15 +202,13 @@
           };
 
           function checkFullscreenState() {
-            // Check for any of the vendor-prefixed fullscreen elements
-            if (document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement) {
+            if (document.fullscreenElement || document.webkitFullscreenElement) {
               reFullscreenButton.style.display = 'none';
             } else {
               reFullscreenButton.style.display = 'block';
             }
           }
-
-          // Listen for fullscreen changes (for desktop/reliable browsers)
+          
           document.addEventListener('fullscreenchange', checkFullscreenState);
           document.addEventListener('webkitfullscreenchange', checkFullscreenState);
           
@@ -206,10 +217,8 @@
             statusOverlay.style.display = 'none';
             unityInstance.SetFullscreen(1);
             
-            // --- THE FIX ---
-            // Start the periodic check ONLY after the game has started.
-            // This acts as a reliable fallback for mobile browser back gestures.
-            setInterval(checkFullscreenState, 1000); // Check every second
+            // Start the periodic check to handle mobile back gestures
+            setInterval(checkFullscreenState, 1000);
             
             // Also run a check shortly after to hide the button initially
             setTimeout(checkFullscreenState, 500);
