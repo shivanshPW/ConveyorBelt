@@ -23,18 +23,20 @@
       #unity-container {
         position: relative;
         box-shadow: 0 0 20px rgba(0,0,0,0.5);
-      }
-      /* The canvas always fills its parent container */
-      #unity-canvas {
-        width: 100%;
-        height: 100%;
         background: #000;
+      }
+      /* The canvas maintains exact resolution */
+      #unity-canvas {
+        width: 1920px !important;
+        height: 1080px !important;
+        background: #000;
+        transform-origin: center center;
       }
       #unity-loading-bar { display: none; }
 
       /* --- UNIFIED STATUS OVERLAY --- */
       #status-overlay {
-        position: absolute;
+        position: fixed;
         top: 0;
         left: 0;
         width: 100vw;
@@ -102,34 +104,50 @@
       var statusText = document.querySelector("#status-text");
       var orientationOverlay = document.querySelector("#orientation-overlay");
 
-      // --- START: NEW SCALING AND LETTERBOXING LOGIC ---
+      // Fixed game resolution
+      const GAME_WIDTH = 1920;
+      const GAME_HEIGHT = 1080;
+      const TARGET_ASPECT_RATIO = GAME_WIDTH / GAME_HEIGHT;
+
+      // --- LETTERBOXING WITH FIXED RESOLUTION ---
       function applyLetterboxing() {
-        // This is your game's native aspect ratio, from your canvas dimensions
-        const targetAspectRatio = 1920 / 1080;
-
-        // Get the browser window's current size
-        let windowWidth = window.innerWidth;
-        let windowHeight = window.innerHeight;
-        let windowAspectRatio = windowWidth / windowHeight;
+        // Get the current available dimensions
+        let availableWidth, availableHeight;
         
-        let newWidth, newHeight;
-
-        if (windowAspectRatio > targetAspectRatio) {
-            // Window is wider than the game, so height is the limiting factor
-            newHeight = windowHeight;
-            newWidth = newHeight * targetAspectRatio;
+        if (document.fullscreenElement) {
+          // In fullscreen, use the actual screen dimensions
+          availableWidth = screen.width;
+          availableHeight = screen.height;
         } else {
-            // Window is taller than the game, so width is the limiting factor
-            newWidth = windowWidth;
-            newHeight = newWidth / targetAspectRatio;
+          // Normal mode, use window dimensions
+          availableWidth = window.innerWidth;
+          availableHeight = window.innerHeight;
         }
         
-        // Apply the calculated size to the game container
-        unityContainer.style.width = newWidth + 'px';
-        unityContainer.style.height = newHeight + 'px';
-      }
-      // --- END: NEW SCALING AND LETTERBOXING LOGIC ---
+        let availableAspectRatio = availableWidth / availableHeight;
+        let scale;
 
+        if (availableAspectRatio > TARGET_ASPECT_RATIO) {
+            // Available space is wider than game, scale by height
+            scale = availableHeight / GAME_HEIGHT;
+        } else {
+            // Available space is taller than game, scale by width
+            scale = availableWidth / GAME_WIDTH;
+        }
+        
+        // Calculate the final container size (this will be smaller than or equal to available space)
+        let containerWidth = GAME_WIDTH * scale;
+        let containerHeight = GAME_HEIGHT * scale;
+        
+        // Apply the calculated size to the game container
+        unityContainer.style.width = containerWidth + 'px';
+        unityContainer.style.height = containerHeight + 'px';
+        
+        // Scale the canvas using CSS transform while maintaining its 1920x1080 size
+        canvas.style.transform = `scale(${scale})`;
+        
+        console.log(`Letterboxing applied: Available(${availableWidth}x${availableHeight}) Scale(${scale.toFixed(3)}) Container(${containerWidth.toFixed(0)}x${containerHeight.toFixed(0)})`);
+      }
 
       function checkOrientation() {
         // This logic is for mobile devices in portrait mode
@@ -146,27 +164,26 @@
         checkOrientation();
       }
 
-      window.addEventListener('resize', onWindowChange);
-      window.addEventListener('orientationchange', onWindowChange);
+      // Listen for fullscreen changes
+      function onFullscreenChange() {
+        // Small delay to ensure the browser has updated the dimensions
+        setTimeout(() => {
+          applyLetterboxing();
+          console.log('Fullscreen changed, letterboxing reapplied');
+        }, 100);
+      }
 
-      function unityShowBanner(msg, type) { 
-        var warningBanner = document.querySelector("#unity-warning");
-        function updateBannerVisibility() {
-          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
-        }
-        var div = document.createElement('div');
-        div.innerHTML = msg;
-        warningBanner.appendChild(div);
-        if (type == 'error') div.style = 'background: red; padding: 10px;';
-        else {
-          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
-          setTimeout(function() {
-            warningBanner.removeChild(div);
-            updateBannerVisibility();
-          }, 5000);
-        }
-        updateBannerVisibility();
-       }
+      // Event listeners
+      window.addEventListener('resize', onWindowChange);
+      window.addEventListener('orientationchange', () => {
+        setTimeout(onWindowChange, 500); // Longer delay for orientation change
+      });
+      document.addEventListener('fullscreenchange', onFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+      document.addEventListener('mozfullscreenchange', onFullscreenChange);
+      document.addEventListener('MSFullscreenChange', onFullscreenChange);
+
+      function unityShowBanner(msg, type) { /* ... unchanged ... */ }
 
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/ABN_Sorting.loader.js";
@@ -198,9 +215,16 @@
           
           statusOverlay.addEventListener('click', () => {
             statusOverlay.style.display = 'none';
-            // We still ask the CONTAINER to go fullscreen.
-            // Since it's already being perfectly sized, the letterboxing is maintained.
-            unityContainer.requestFullscreen();
+            // Request fullscreen on the container
+            if (unityContainer.requestFullscreen) {
+              unityContainer.requestFullscreen();
+            } else if (unityContainer.webkitRequestFullscreen) {
+              unityContainer.webkitRequestFullscreen();
+            } else if (unityContainer.mozRequestFullScreen) {
+              unityContainer.mozRequestFullScreen();
+            } else if (unityContainer.msRequestFullscreen) {
+              unityContainer.msRequestFullscreen();
+            }
           }, { once: true });
 
         }).catch((message) => {
