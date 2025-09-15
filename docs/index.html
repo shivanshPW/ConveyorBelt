@@ -107,20 +107,11 @@
         // This is your game's native aspect ratio, from your canvas dimensions
         const targetAspectRatio = 1920 / 1080;
 
-        // Get the current available dimensions
-        let windowWidth, windowHeight;
-        
-        if (document.fullscreenElement) {
-          // In fullscreen, use the actual screen dimensions
-          windowWidth = screen.width;
-          windowHeight = screen.height;
-        } else {
-          // Normal mode, use window dimensions
-          windowWidth = window.innerWidth;
-          windowHeight = window.innerHeight;
-        }
-        
+        // Get the browser window's current size
+        let windowWidth = window.innerWidth;
+        let windowHeight = window.innerHeight;
         let windowAspectRatio = windowWidth / windowHeight;
+        
         let newWidth, newHeight;
 
         if (windowAspectRatio > targetAspectRatio) {
@@ -139,6 +130,7 @@
       }
       // --- END: NEW SCALING AND LETTERBOXING LOGIC ---
 
+
       function checkOrientation() {
         // This logic is for mobile devices in portrait mode
         if (window.innerHeight > window.innerWidth && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
@@ -154,23 +146,27 @@
         checkOrientation();
       }
 
-      // Listen for fullscreen changes
-      function onFullscreenChange() {
-        // Small delay to ensure the browser has updated the dimensions
-        setTimeout(() => {
-          applyLetterboxing();
-        }, 100);
-      }
-
-      // Event listeners
       window.addEventListener('resize', onWindowChange);
       window.addEventListener('orientationchange', onWindowChange);
-      document.addEventListener('fullscreenchange', onFullscreenChange);
-      document.addEventListener('webkitfullscreenchange', onFullscreenChange);
-      document.addEventListener('mozfullscreenchange', onFullscreenChange);
-      document.addEventListener('MSFullscreenChange', onFullscreenChange);
 
-      function unityShowBanner(msg, type) { /* ... unchanged ... */ }
+      function unityShowBanner(msg, type) { 
+        var warningBanner = document.querySelector("#unity-warning");
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+       }
 
       var buildUrl = "Build";
       var loaderUrl = buildUrl + "/ABN_Sorting.loader.js";
@@ -202,16 +198,9 @@
           
           statusOverlay.addEventListener('click', () => {
             statusOverlay.style.display = 'none';
-            // Request fullscreen on the container
-            if (unityContainer.requestFullscreen) {
-              unityContainer.requestFullscreen();
-            } else if (unityContainer.webkitRequestFullscreen) {
-              unityContainer.webkitRequestFullscreen();
-            } else if (unityContainer.mozRequestFullScreen) {
-              unityContainer.mozRequestFullScreen();
-            } else if (unityContainer.msRequestFullscreen) {
-              unityContainer.msRequestFullscreen();
-            }
+            // We still ask the CONTAINER to go fullscreen.
+            // Since it's already being perfectly sized, the letterboxing is maintained.
+            unityContainer.requestFullscreen();
           }, { once: true });
 
         }).catch((message) => {
