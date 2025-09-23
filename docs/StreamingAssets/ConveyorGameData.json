@@ -18,9 +18,9 @@
       "reactor": 0,
 
       "containers": [
-        { "name": "ACID", "id": "acid_beaker" },
+        { "name": "NEUTRAL", "id": "neutral_beaker" },
         { "name": "BASE", "id": "base_beaker" },
-        { "name": "NEUTRAL", "id": "neutral_beaker" }
+        { "name": "ACID", "id": "acid_beaker" }
       ],
 
       "items": [
@@ -100,9 +100,9 @@
       "reactor": 1,
 
       "containers": [
-        { "name": "ACID", "id": "acid_beaker" },
+        { "name": "NEUTRAL", "id": "neutral_beaker" },
         { "name": "BASE", "id": "base_beaker" },
-        { "name": "NEUTRAL", "id": "neutral_beaker" }
+        { "name": "ACID", "id": "acid_beaker" }
       ],
 
       "items": [
